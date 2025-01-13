@@ -33,9 +33,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -46,7 +45,6 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.tigerbotics.constant.DriveConsts;
-import org.tigerbotics.util.Elastic;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
@@ -63,13 +61,18 @@ public class Drivetrain extends SubsystemBase {
     private final SimpleMotorFeedforward m_feedForward;
 
     // Field for simulation
-    @Logged
-    private final Field2d m_field = new Field2d();
+    @Logged private final Field2d m_field = new Field2d();
 
     private final boolean m_fieldOriented = DriveConsts.kDefaultFieldOriented;
 
-    Alert m_motorConfigAlert = new Alert("Drivetrain: SparkMAX %d configure failed! (Performance likely affected!)", AlertType.kError);
-    Alert m_navxConnectAlert = new Alert("Drivetrain: NavX failed to connect! (Odometry & Field-oriented affected!)", AlertType.kError);
+    Alert m_motorConfigAlert =
+            new Alert(
+                    "Drivetrain: SparkMAX %d configure failed! (Performance likely affected!)",
+                    AlertType.kError);
+    Alert m_navxConnectAlert =
+            new Alert(
+                    "Drivetrain: NavX failed to connect! (Odometry & Field-oriented affected!)",
+                    AlertType.kError);
 
     public Drivetrain() {
         // * DT motors will always be in front left, front right, rear left, rear right order.
@@ -121,7 +124,8 @@ public class Drivetrain extends SubsystemBase {
 
         // Alert if the config failed.
         if (response != REVLibError.kOk) {
-            m_motorConfigAlert.setText(String.format(m_motorConfigAlert.getText(), motor.getDeviceId()));
+            m_motorConfigAlert.setText(
+                    String.format(m_motorConfigAlert.getText(), motor.getDeviceId()));
             m_motorConfigAlert.set(true);
         }
     }
