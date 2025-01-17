@@ -29,7 +29,7 @@ public class Robot extends TimedRobot {
         // Setup subsystem default commands
         m_drivetrain.setDefaultCommand(
                 m_drivetrain.driveCommand(
-                        m_driver::getLeftY,
+                        () -> -m_driver.getLeftY(),
                         m_driver::getLeftX,
                         m_driver::getRightX,
                         m_driver::getRightY,
