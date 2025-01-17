@@ -9,8 +9,6 @@ import static edu.wpi.first.units.Units.*;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
-
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
@@ -110,8 +108,10 @@ public class DriveConsts {
 
         // Set PID values for the spark's built-in PID controller.
         config.closedLoop.maxMotion.maxVelocity(kMaxLinearVelocity.in(MetersPerSecond));
-        config.closedLoop.maxMotion.maxAcceleration(kMaxLinearVelocity.per(Second).times(100).in(MetersPerSecondPerSecond));
-        config.closedLoop.p(0.7); // I tried tuning this in sim to no avail, good luck future jeff and seth.
+        config.closedLoop.maxMotion.maxAcceleration(
+                kMaxLinearVelocity.per(Second).times(100).in(MetersPerSecondPerSecond));
+        // I tried tuning this in sim to no avail, good luck future jeff and seth.
+        config.closedLoop.p(0.7);
         config.closedLoop.i(0);
         config.closedLoop.d(0.05);
         config.closedLoop.velocityFF(1 / 473); // from rev docs and neo 1.1 specs.
