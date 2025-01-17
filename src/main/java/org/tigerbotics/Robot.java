@@ -12,11 +12,16 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import org.tigerbotics.subsystem.Drivetrain;
+import org.tigerbotics.subsystem.Odometry;
+import org.tigerbotics.subsystem.Vision;
 
 @Logged
 public class Robot extends TimedRobot {
 
     private final Drivetrain m_drivetrain = new Drivetrain();
+    private final Vision m_vision = new Vision();
+
+    private final Odometry m_odometry = new Odometry(m_drivetrain, m_vision);
 
     private final CommandXboxController m_driver = new CommandXboxController(0);
 

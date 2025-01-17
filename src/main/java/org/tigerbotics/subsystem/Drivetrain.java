@@ -25,21 +25,16 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.estimator.MecanumDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
@@ -56,14 +51,8 @@ public class Drivetrain extends SubsystemBase {
     private final List<DCMotorSim> m_motorSims = new ArrayList<>();
     private final AHRS m_navx;
 
-    // Odometry
-    private final MecanumDrivePoseEstimator m_poseEstimator;
-
     // Feedforward control
     private final SimpleMotorFeedforward m_feedForward = kFeedforward;
-
-    // Field for simulation
-    @Logged private final Field2d m_field = new Field2d();
 
     private final boolean m_fieldOriented = kDefaultFieldOriented;
 
@@ -83,11 +72,6 @@ public class Drivetrain extends SubsystemBase {
         m_navx = new AHRS(NavXComType.kMXP_SPI);
         // Raise alert if navX is not connected.
         kNavXConnectAlert.set(!m_navx.isConnected());
-
-        // Start the odometry / pose estimator.
-        m_poseEstimator =
-                new MecanumDrivePoseEstimator(
-                        kKinematics, getRotation2d(), getWheelPositions(), new Pose2d());
     }
 
     /**
@@ -116,12 +100,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     @Override
-    public void periodic() {
-        m_poseEstimator.updateWithTime(
-                Timer.getFPGATimestamp(), getRotation2d(), getWheelPositions());
-
-        m_field.setRobotPose(getPose2d());
-    }
+    public void periodic() {}
 
     @Override
     public void simulationPeriodic() {
@@ -161,10 +140,6 @@ public class Drivetrain extends SubsystemBase {
         int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[4]");
         SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
         angle.set(m_navx.getYaw() + deltaOmega);
-
-        // Update the field.
-        m_field.setRobotPose(getPose2d());
-        SmartDashboard.putData(m_field);
     }
 
     public void drive(Translation2d translation, Rotation2d rotation, boolean openLoop) {
@@ -193,24 +168,10 @@ public class Drivetrain extends SubsystemBase {
         }
     }
 
-    /**
-     * Add vision pose estimations to the robot pose.
-     *
-     * @param visionPose The pose as seen by vision.
-     * @param visionPoseTimestamp The timestamp that the vision pose was generated at.
-     */
-    public void addVisionEstimate(Pose2d visionPose, double visionPoseTimestamp) {
-        m_poseEstimator.addVisionMeasurement(visionPose, visionPoseTimestamp);
-    }
-
     // ~ Getters
 
     public Rotation2d getRotation2d() {
         return m_navx.getRotation2d();
-    }
-
-    public Pose2d getPose2d() {
-        return m_poseEstimator.getEstimatedPosition();
     }
 
     public MecanumDriveWheelPositions getWheelPositions() {
@@ -235,17 +196,10 @@ public class Drivetrain extends SubsystemBase {
 
     // ~ Setters
 
-    /** @param currentPose The pose the robot is located (Rotation does not matter). */
-    public void setOdometryPose(Pose2d currentPose) {
-        m_poseEstimator.resetPosition(getRotation2d(), getWheelPositions(), currentPose);
-    }
-
     /** Set the current heading to zero. */
     public void resetHeading() {
         m_navx.reset();
     }
-
-    @Logged ChassisSpeeds targetChassisSpeeds;
 
     /**
      * Set the target chassis speeds to be achieved by the chassis.
@@ -253,22 +207,18 @@ public class Drivetrain extends SubsystemBase {
      * @param targetSpeeds
      */
     public void setTargetChassisSpeeds(ChassisSpeeds targetChassisSpeed) {
-        this.targetChassisSpeeds = targetChassisSpeed;
         setClosedLoopSpeeds(kKinematics.toWheelSpeeds(targetChassisSpeed));
     }
 
-    @Logged MecanumDriveWheelSpeeds targetWheelSpeeds;
-
     /**
      * Set the target wheel speeds to be achieved by each wheel. Uses the built in PID controller on
-     * the SparkMAX
+     * the SparkMAX.
      *
      * @param targetWheelSpeeds
      */
     public void setClosedLoopSpeeds(MecanumDriveWheelSpeeds targetWheelSpeeds) {
+        // Make sure all of the speeds are atainable.
         targetWheelSpeeds.desaturate(kMaxLinearVelocity);
-
-        this.targetWheelSpeeds = targetWheelSpeeds;
 
         List<Double> wheelSpeeds =
                 List.of(
