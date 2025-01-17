@@ -1,6 +1,8 @@
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2025.1.1"
+    id "edu.wpi.first.GradleRIO" version "2025.2.1"
+    id "com.diffplug.spotless" version "6.7.2"
+    id "com.peterabeles.gversion" version "1.10"
 }
 
 java {
@@ -8,7 +10,18 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-def ROBOT_MAIN_CLASS = "frc.robot.Main"
+project.compileJava.dependsOn(createVersionFile)
+gversion {
+    srcDir = "src/main/java"
+    classPackage = "org.tigerbotics"
+    className = "BuildConstants"
+    dateFormat = "yyyy-MM-dd HH:mm:ss z"
+    timeZone = "America/Chicago"
+    indent = "    "
+}
+
+
+def ROBOT_MAIN_CLASS = "org.tigerbotics.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.
@@ -34,7 +47,7 @@ deploy {
                     files = project.fileTree('src/main/deploy')
                     directory = '/home/lvuser/deploy'
                     deleteOldFiles = false // Change to true to delete files on roboRIO that no
-                                           // longer exist in deploy directory of this project
+                    // longer exist in deploy directory of this project
                 }
             }
         }
@@ -101,4 +114,38 @@ wpi.java.configureTestTasks(test)
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
+}
+
+spotless {
+    enforceCheck false
+    java {
+        target fileTree('.') {
+            include '**/*.java'
+            exclude '**/build/**', '**/build-*/**', '**/BuildConstants.java'
+        }
+        licenseHeaderFile 'LICENSE_SHORTHAND'
+        importOrder('\\#', 'org.tigerbotics', 'edu.wpi', '')
+        removeUnusedImports()
+        // eclipse().configFile('java-formatter.xml')
+        googleJavaFormat('1.10.0').aosp().reflowLongStrings()
+    }
+    groovyGradle {
+        target fileTree('.') {
+            include '**/*.gradle'
+            exclude '**/build/**', '**/build-*/**'
+        }
+        greclipse()
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format 'misc', {
+        target fileTree('.') {
+            include '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml'
+            exclude '**/build/**', '**/build-*/**'
+        }
+        trimTrailingWhitespace()
+        indentWithSpaces(2)
+        endWithNewline()
+    }
 }
