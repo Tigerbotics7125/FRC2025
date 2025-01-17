@@ -5,9 +5,6 @@
  */
 package org.tigerbotics.subsystem;
 
-import org.tigerbotics.Robot;
-import org.tigerbotics.constant.DriveConsts;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.estimator.MecanumDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,6 +13,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.tigerbotics.constant.DriveConsts;
 
 @Logged
 public class Odometry extends SubsystemBase {
@@ -41,7 +39,12 @@ public class Odometry extends SubsystemBase {
                         m_drivetrain.getWheelPositions(),
                         new Pose2d());
 
-            m_simOdometry = new MecanumDriveOdometry(DriveConsts.kKinematics, m_drivetrain.getRotation2d(), m_drivetrain.getWheelPositions(), new Pose2d());
+        m_simOdometry =
+                new MecanumDriveOdometry(
+                        DriveConsts.kKinematics,
+                        m_drivetrain.getRotation2d(),
+                        m_drivetrain.getWheelPositions(),
+                        new Pose2d());
     }
 
     @Override

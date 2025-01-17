@@ -7,10 +7,11 @@ package org.tigerbotics.subsystem;
 
 import static org.tigerbotics.constant.VisionConsts.*;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -18,9 +19,6 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Vision extends SubsystemBase {
 
@@ -45,10 +43,10 @@ public class Vision extends SubsystemBase {
         // Whenever we only see one tag, use the position
         m_poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
-            // Add the april tags to the vision environment.
-            m_visionSim.addAprilTags(kFieldTags);
-            // Add the camera to the vision environment.
-            m_visionSim.addCamera(m_cameraSim, kRobotToCamera);
+        // Add the april tags to the vision environment.
+        m_visionSim.addAprilTags(kFieldTags);
+        // Add the camera to the vision environment.
+        m_visionSim.addCamera(m_cameraSim, kRobotToCamera);
     }
 
     public List<Optional<EstimatedRobotPose>> getEstimatedPoses() {
