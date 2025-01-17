@@ -6,6 +6,8 @@
 package org.tigerbotics.subsystem;
 
 import static edu.wpi.first.units.Units.*;
+import static org.tigerbotics.constant.DriveConsts.*;
+import static org.tigerbotics.constant.DriveConsts.Simulation.*;
 
 import com.revrobotics.REVLibError;
 import com.revrobotics.sim.SparkMaxSim;
@@ -15,6 +17,7 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkMax;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
@@ -29,13 +32,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,90 +48,69 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import org.tigerbotics.constant.DriveConsts;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
 
     // Controllers & Sensors
     private final List<SparkMax> m_motors;
-    private final List<SparkMaxSim> m_motorSims = new ArrayList<>();
+    private final List<SparkMaxSim> m_sparkSims = new ArrayList<>();
+    private final List<DCMotorSim> m_motorSims = new ArrayList<>();
     private final AHRS m_navx;
 
     // Odometry
     private final MecanumDrivePoseEstimator m_poseEstimator;
 
     // Feedforward control
-    private final SimpleMotorFeedforward m_feedForward;
+    private final SimpleMotorFeedforward m_feedForward = kFeedforward;
 
     // Field for simulation
     @Logged private final Field2d m_field = new Field2d();
 
-    private final boolean m_fieldOriented = DriveConsts.kDefaultFieldOriented;
-
-    Alert m_motorConfigAlert =
-            new Alert(
-                    "Drivetrain: SparkMAX %d configure failed! (Performance likely affected!)",
-                    AlertType.kError);
-    Alert m_navxConnectAlert =
-            new Alert(
-                    "Drivetrain: NavX failed to connect! (Odometry & Field-oriented affected!)",
-                    AlertType.kError);
+    private final boolean m_fieldOriented = kDefaultFieldOriented;
 
     public Drivetrain() {
-        // * DT motors will always be in front left, front right, rear left, rear right order.
-        m_motors =
-                List.of(
-                        new SparkMax(DriveConsts.kFrontLeftID, MotorType.kBrushless),
-                        new SparkMax(DriveConsts.kFrontRightID, MotorType.kBrushless),
-                        new SparkMax(DriveConsts.kRearLeftID, MotorType.kBrushless),
-                        new SparkMax(DriveConsts.kRearRightID, MotorType.kBrushless));
+        // Motors will always be in order: FL, FR, RL, RR.
+        m_motors = List.of(
+                new SparkMax(kFrontLeftID, MotorType.kBrushless),
+                new SparkMax(kFrontRightID, MotorType.kBrushless),
+                new SparkMax(kRearLeftID, MotorType.kBrushless),
+                new SparkMax(kRearRightID, MotorType.kBrushless));
 
+        // Configure the motors
         m_motors.forEach(this::configureMotor);
 
+        // Create the navX using the SPI on the rio.
         m_navx = new AHRS(NavXComType.kMXP_SPI);
-        m_navxConnectAlert.set(m_navx.isConnected());
+        // Raise alert if navX is not connected.
+        kNavXConnectAlert.set(!m_navx.isConnected());
 
-        m_poseEstimator =
-                new MecanumDrivePoseEstimator(
-                        DriveConsts.kKinematics,
-                        getRotation2d(),
-                        getWheelPositions(),
-                        new Pose2d());
-
-        m_feedForward =
-                new SimpleMotorFeedforward(
-                        DriveConsts.kFF_ks, DriveConsts.kFF_kv, DriveConsts.kFF_ka);
+        // Start the odometry / pose estimator.
+        m_poseEstimator = new MecanumDrivePoseEstimator(
+                kKinematics, getRotation2d(), getWheelPositions(), new Pose2d());
     }
 
+    /**
+     * Configures a motor by applying the SparkMaxConfig object.
+     * This method will raise an Alert on the dashboard if the config fails.
+     * <p>
+     * This method will also handle setting up the simulation objects for each motor.
+     * @param motor The motor to configure.
+     */
     private void configureMotor(SparkMax motor) {
-        m_motorSims.add(new SparkMaxSim(motor, DCMotor.getNEO(1)));
+        // Setup simulation objects.
+        m_sparkSims.add(new SparkMaxSim(motor, kMotor));
+        m_motorSims.add(new DCMotorSim(kMotorPlant, kMotor));
 
-        // Invert the right side motors.
-        /**
-         * TODO: I don't like that these are mutating the "const" config object but you're supposed
-         * to apply inversion via the config now so idk what to do.
-         */
-        if (motor.getDeviceId() == DriveConsts.kFrontRightID
-                || motor.getDeviceId() == DriveConsts.kRearRightID) {
-            DriveConsts.kMotorConfig.inverted(true);
-        } else {
-            DriveConsts.kMotorConfig.inverted(false);
-        }
-
-        // Apply configurations to the motor, this will write the configs to flash.
+        // Apply SparkMAX configurations.
+        SparkMaxConfig config = motor.getDeviceId() == kFrontRightID || motor.getDeviceId() == kRearRightID ? kRightMotorsConfig : kLeftMotorsConfig;
         REVLibError response =
                 motor.configure(
-                        DriveConsts.kMotorConfig,
+                        config,
                         ResetMode.kNoResetSafeParameters,
                         PersistMode.kPersistParameters);
-
-        // Alert if the config failed.
-        if (response != REVLibError.kOk) {
-            m_motorConfigAlert.setText(
-                    String.format(m_motorConfigAlert.getText(), motor.getDeviceId()));
-            m_motorConfigAlert.set(true);
-        }
+        // Raise alert if config failed.
+        kMotorConfigAlert.set(response != REVLibError.kOk);
     }
 
     @Override
@@ -140,21 +123,35 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
+        double vIn = RoboRioSim.getVInVoltage();
+        double accumCurrent = 0;
+
         for (int i = 0; i < 4; i++) {
-            m_motorSims.get(i).iterate(i, i, i);
+            // Breaks sim, ask me how I know.
+            if (vIn == 0)
+                break;
+
+            // Update the motor sim
+            m_motorSims.get(i).setInputVoltage(m_motors.get(i).getAppliedOutput() * vIn);
+            m_motorSims.get(i).update(0.02);
+            // update the spark values from sim
+            m_sparkSims
+                    .get(i)
+                    .iterate(m_motorSims.get(i).getAngularVelocityRPM() / 60.0 * kWheelCircumference.in(Meters), vIn, 0.02);
+            // Add the current draw to the sim.
+            accumCurrent += m_sparkSims.get(i).getMotorCurrent();
         }
 
-        // Get the angular velocity
-        AngularVelocity omegaVel =
-                AngularVelocity.ofBaseUnits(
-                        getChassisSpeeds().omegaRadiansPerSecond, RadiansPerSecond);
+        // Set the calculated voltage to the system.
+        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(accumCurrent));
+
         // Get the change in angle (Euler's Method)
-        Angle deltaOmega = omegaVel.times(Milliseconds.of(20));
+        double deltaOmega = Units.radiansToDegrees(getChassisSpeeds().omegaRadiansPerSecond) / kMaxAngularVelocity.in(DegreesPerSecond) * 0.02;
 
         // Update the NavX angle
-        int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
+        int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[4]");
         SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
-        angle.set(m_navx.getFusedHeading() + deltaOmega.in(Degrees));
+        angle.set(m_navx.getYaw() + deltaOmega);
 
         // Update the field.
         m_field.setRobotPose(getPose2d());
@@ -170,7 +167,8 @@ public class Drivetrain extends SubsystemBase {
         // be useful,
         // See 2023 drivetrain code for info, implementation wasn't great but it should be a good
         // starting point.
-        double thetaSpeed = rotation.getCos();
+        double thetaSpeed = rotation.getSin();
+        // System.out.println(translation.getX() + " " + translation.getY() + " " + thetaSpeed);
 
         if (openLoop) {
             setOpenLoopSpeeds(
@@ -178,8 +176,8 @@ public class Drivetrain extends SubsystemBase {
                             translation.getX(), translation.getY(), thetaSpeed));
         } else {
             // For closed loop, scale duty cycle values to velocity values.
-            translation = translation.times(DriveConsts.kMaxLinearVelocity.in(MetersPerSecond));
-            thetaSpeed = thetaSpeed * DriveConsts.kMaxAngularVelocity.in(RotationsPerSecond);
+            translation = translation.times(kMaxLinearVelocity.in(MetersPerSecond));
+            thetaSpeed = thetaSpeed * kMaxAngularVelocity.in(RadiansPerSecond);
 
             setTargetChassisSpeeds(
                     new ChassisSpeeds(translation.getX(), translation.getY(), thetaSpeed));
@@ -223,7 +221,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public ChassisSpeeds getChassisSpeeds() {
-        return DriveConsts.kKinematics.toChassisSpeeds(getWheelSpeeds());
+        return kKinematics.toChassisSpeeds(getWheelSpeeds());
     }
 
     // ~ Setters
@@ -238,14 +236,21 @@ public class Drivetrain extends SubsystemBase {
         m_navx.reset();
     }
 
+    @Logged
+    ChassisSpeeds targetChassisSpeeds;
+
     /**
      * Set the target chassis speeds to be achieved by the chassis.
      *
      * @param targetSpeeds
      */
     public void setTargetChassisSpeeds(ChassisSpeeds targetChassisSpeed) {
-        setClosedLoopSpeeds(DriveConsts.kKinematics.toWheelSpeeds(targetChassisSpeed));
+        this.targetChassisSpeeds = targetChassisSpeed;
+        setClosedLoopSpeeds(kKinematics.toWheelSpeeds(targetChassisSpeed));
     }
+
+    @Logged
+    MecanumDriveWheelSpeeds targetWheelSpeeds;
 
     /**
      * Set the target wheel speeds to be achieved by each wheel. Uses the built in PID controller on
@@ -254,7 +259,9 @@ public class Drivetrain extends SubsystemBase {
      * @param targetWheelSpeeds
      */
     public void setClosedLoopSpeeds(MecanumDriveWheelSpeeds targetWheelSpeeds) {
-        targetWheelSpeeds.desaturate(DriveConsts.kMaxLinearVelocity);
+        targetWheelSpeeds.desaturate(kMaxLinearVelocity);
+
+        this.targetWheelSpeeds = targetWheelSpeeds;
 
         List<Double> wheelSpeeds =
                 List.of(
@@ -268,7 +275,7 @@ public class Drivetrain extends SubsystemBase {
                     .getClosedLoopController()
                     .setReference(
                             wheelSpeeds.get(i),
-                            ControlType.kVelocity,
+                            ControlType.kMAXMotionVelocityControl,
                             ClosedLoopSlot.kSlot0,
                             m_feedForward.calculate(wheelSpeeds.get(i)),
                             ArbFFUnits.kVoltage);

@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "DriveConsts",
+      "request": "launch",
+      "mainClass": "org.tigerbotics.constant.DriveConsts",
+      "projectName": "frc2025"
+    },
+    {
+      "type": "java",
       "name": "Main",
       "request": "launch",
       "mainClass": "org.tigerbotics.Main",
