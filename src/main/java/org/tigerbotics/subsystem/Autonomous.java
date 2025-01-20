@@ -23,12 +23,11 @@ public class Autonomous extends SubsystemBase {
     Drivetrain drive;
     Odometry odom;
 
-
-  public Autonomous(Drivetrain drive, Odometry odom){
-    this.drive=drive;
-    this.odom=odom;
-    // All other subsystem initialization
-    NamedCommands.registerCommand("print", Commands.print("asdf"));
+    public Autonomous(Drivetrain drive, Odometry odom) {
+        this.drive = drive;
+        this.odom = odom;
+        // All other subsystem initialization
+        NamedCommands.registerCommand("print", Commands.print("asdf"));
 
         // Load the RobotConfig from the GUI settings. You should probably
         // store this in your Constants file
@@ -67,22 +66,20 @@ public class Autonomous extends SubsystemBase {
                     // This will flip the path being followed to the red side of the field.
                     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-              var alliance = DriverStation.getAlliance();
-              if (alliance.isPresent()) {
-                return alliance.get() == DriverStation.Alliance.Red;
-              }
-              return false;
-            },
-            this // Reference to this subsystem to set requirements
-    );
-    
-  }
-  public Command getAutonomousCommand() {
-    // This method loads the auto when it is called, however, it is recommended
-    // to first load your paths/autos when code starts, then return the
-    // pre-loaded auto/path
-    return new PathPlannerAuto("Example Auto");
-  }
-  
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
+                },
+                this // Reference to this subsystem to set requirements
+                );
+    }
 
+    public Command getAutonomousCommand() {
+        // This method loads the auto when it is called, however, it is recommended
+        // to first load your paths/autos when code starts, then return the
+        // pre-loaded auto/path
+        return new PathPlannerAuto("Example Auto");
+    }
 }
