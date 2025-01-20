@@ -5,15 +5,18 @@
  */
 package org.tigerbotics;
 
+import org.tigerbotics.subsystem.Autonomous;
+import org.tigerbotics.subsystem.Drivetrain;
+import org.tigerbotics.subsystem.Odometry;
+import org.tigerbotics.subsystem.Vision;
+
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import org.tigerbotics.subsystem.Drivetrain;
-import org.tigerbotics.subsystem.Odometry;
-import org.tigerbotics.subsystem.Vision;
 
 @Logged
 public class Robot extends TimedRobot {
@@ -22,6 +25,7 @@ public class Robot extends TimedRobot {
     private final Vision m_vision = new Vision();
 
     private final Odometry m_odometry = new Odometry(m_drivetrain, m_vision);
+    private final Autonomous auto = new Autonomous(m_drivetrain, m_odometry);
 
     private final CommandXboxController m_driver = new CommandXboxController(0);
 
@@ -47,7 +51,10 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void autonomousInit() {}
+    public void autonomousInit() {
+        Command autoCommand = auto.getAutonomousCommand();
+        autoCommand.schedule();
+    }
 
     @Override
     public void autonomousPeriodic() {}
