@@ -5,48 +5,39 @@
  */
 package org.tigerbotics.subsystem;
 
+import static org.tigerbotics.constant.IntakeConsts.*;
+
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
-    SparkMax m_Intake_Left = new SparkMax(0, MotorType.kBrushless);
-    SparkMax m_Intake_Right = new SparkMax(0, MotorType.kBrushless);
-    SparkMaxConfig config = new SparkMaxConfig();
+    private final SparkMax m_left = new SparkMax(kLeftID, kMotorType);
+    private final SparkMax m_right = new SparkMax(kRightID, kMotorType);
 
-    public static final SparkMaxConfig m_Intake_Left_Config = new SparkMaxConfig();
-    public static final SparkMaxConfig m_Intake_Right_Config = new SparkMaxConfig();
-
-    {
-        config.smartCurrentLimit(80);
-
-        // Set the conversion factors, converting motor position and velocity (rotations
-        // & RPM) to linear wheel position & valocity (meters & meters/second)
-
-        // Set the config objects.
-        m_Intake_Left_Config.apply(config);
-        m_Intake_Right_Config.apply(config);
-        m_Intake_Right_Config.follow(m_Intake_Left);
-
-        // Invert the right side. (This must be done after the apply otherwise it would
-        // get overwritten.)
-        m_Intake_Left_Config.inverted(false);
-        m_Intake_Right_Config.inverted(true);
-        m_Intake_Left.configure(
-                m_Intake_Left_Config,
-                ResetMode.kNoResetSafeParameters,
-                PersistMode.kPersistParameters);
+    public Intake() {
+        m_left.configure(
+                kLeftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_right.configure(
+                kRightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
+    /** @return A Command which disables motor output. */
     public Command disable() {
-        return run(m_Intake_Left::disable);
+        return run(m_left::disable);
     }
 
+    /** @return A Command which intakes. */
     public Command intake() {
-        return run(() -> m_Intake_Left.set(0.25));
+        return runOnce(() -> m_left.set(kIntakeSpeed));
     }
+
+    /** @return A Command which outtakes. */
+    public Command outtake() {
+        return runOnce(() -> m_left.set(kOuttakeSpeed));
+    }
+
+    // TODO: Look into automating intake sequences with current draw monitoring.
 }
