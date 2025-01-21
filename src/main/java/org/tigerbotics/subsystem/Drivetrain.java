@@ -28,7 +28,6 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -42,7 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-
 import org.tigerbotics.Robot;
 
 @Logged
@@ -213,10 +211,16 @@ public class Drivetrain extends SubsystemBase {
         var wheelSpeeds = kKinematics.toWheelSpeeds(targetChassisSpeed);
         if (Robot.isSimulation()) {
             // force open loop
-            setOpenLoopSpeeds(new MecanumDrive.WheelSpeeds(wheelSpeeds.frontLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond),
-            wheelSpeeds.frontRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond),
-            wheelSpeeds.rearLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond),
-            wheelSpeeds.rearRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond)));
+            setOpenLoopSpeeds(
+                    new MecanumDrive.WheelSpeeds(
+                            wheelSpeeds.frontLeftMetersPerSecond
+                                    / kMaxLinearVelocity.in(MetersPerSecond),
+                            wheelSpeeds.frontRightMetersPerSecond
+                                    / kMaxLinearVelocity.in(MetersPerSecond),
+                            wheelSpeeds.rearLeftMetersPerSecond
+                                    / kMaxLinearVelocity.in(MetersPerSecond),
+                            wheelSpeeds.rearRightMetersPerSecond
+                                    / kMaxLinearVelocity.in(MetersPerSecond)));
         } else {
             setClosedLoopSpeeds(wheelSpeeds);
         }
