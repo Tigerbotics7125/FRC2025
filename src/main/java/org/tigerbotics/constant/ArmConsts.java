@@ -8,7 +8,6 @@ package org.tigerbotics.constant;
 import static edu.wpi.first.units.Units.*;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.units.measure.Dimensionless;
 
 public class ArmConsts {
@@ -19,8 +18,6 @@ public class ArmConsts {
 
     // TODO: Find the actual value.
     public static final Dimensionless kGearRatio = Value.of(100);
-
-
 
     // Use a static block to alter the config here as opposed to in Drivetrain
     // class.
@@ -33,7 +30,8 @@ public class ArmConsts {
 
         // Set the conversion factors, converting motor position and velocity (rotations
         // & RPM) to linear wheel position & valocity (meters & meters/second)
-        config.encoder.positionConversionFactor(Value.of(1).div(kGearRatio).times(2 * Math.PI).magnitude());
+        config.encoder.positionConversionFactor(
+                Value.of(1).div(kGearRatio).times(2 * Math.PI).magnitude());
         config.encoder.velocityConversionFactor(
                 kWheelCircumference
                         .div(kGearRatio)

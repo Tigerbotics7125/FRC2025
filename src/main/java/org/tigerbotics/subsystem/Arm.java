@@ -49,16 +49,13 @@ public class Arm extends SubsystemBase {
 
         configureMotor(m_motor);
 
-
         var root = m_mech.getRoot("arm", 0.5, 0.5);
         root.append(m_armMechLig);
 
         SmartDashboard.putData("arm mech", m_mech);
     }
 
-    private void configureMotor(SparkMax motor) {
-
-    }
+    private void configureMotor(SparkMax motor) {}
 
     @Override
     public void periodic() {}
