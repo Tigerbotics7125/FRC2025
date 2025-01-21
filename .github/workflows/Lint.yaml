@@ -2,10 +2,14 @@ name: Lint
 
 on:
   push:
-  workflow_dispatch:
+    branches:
+      - 'main'
+  issue_comment:
 
 jobs:
   lint:
+    if: ${{ github.event_name != 'issue_comment' || ( github.event.issue.pull_request && contains(github.event.comment.body '/support') }}
+
     permissions:
       contents: write
 
