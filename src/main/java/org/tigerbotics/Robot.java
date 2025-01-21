@@ -18,6 +18,12 @@ import org.tigerbotics.subsystem.Vision;
 @Logged
 public class Robot extends TimedRobot {
 
+    // These are used for logs so we can track down issues if needed.
+    private final String GIT_SHA = BuildConstants.GIT_SHA;
+    private final String GIT_DATE = BuildConstants.GIT_DATE;
+    private final String GIT_BRANCH = BuildConstants.GIT_BRANCH;
+    private final String BUILD_DATE = BuildConstants.BUILD_DATE;
+
     private final Drivetrain m_drivetrain = new Drivetrain();
     private final Vision m_vision = new Vision();
 
