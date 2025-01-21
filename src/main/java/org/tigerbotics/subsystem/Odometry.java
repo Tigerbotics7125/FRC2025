@@ -96,5 +96,6 @@ public class Odometry extends SubsystemBase {
      */
     public void setPose2d(Pose2d currentPose) {
         m_poseEstimator.resetPose(currentPose);
+        m_simOdometry.resetPose(currentPose);
     }
 }

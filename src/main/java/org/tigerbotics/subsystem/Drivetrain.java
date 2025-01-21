@@ -28,6 +28,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -41,6 +42,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+
+import org.tigerbotics.Robot;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
@@ -139,7 +142,7 @@ public class Drivetrain extends SubsystemBase {
         // Update the NavX angle
         int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[4]");
         SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
-        angle.set(m_navx.getYaw() + deltaOmega);
+        angle.set(m_navx.getYaw() - deltaOmega);
     }
 
     public void drive(Translation2d translation, Rotation2d rotation, boolean openLoop) {
@@ -207,7 +210,16 @@ public class Drivetrain extends SubsystemBase {
      * @param targetSpeeds
      */
     public void setTargetChassisSpeeds(ChassisSpeeds targetChassisSpeed) {
-        setClosedLoopSpeeds(kKinematics.toWheelSpeeds(targetChassisSpeed));
+        var wheelSpeeds = kKinematics.toWheelSpeeds(targetChassisSpeed);
+        if (Robot.isSimulation()) {
+            // force open loop
+            setOpenLoopSpeeds(new MecanumDrive.WheelSpeeds(wheelSpeeds.frontLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond),
+            wheelSpeeds.frontRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond),
+            wheelSpeeds.rearLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond),
+            wheelSpeeds.rearRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond)));
+        } else {
+            setClosedLoopSpeeds(wheelSpeeds);
+        }
     }
 
     /**
