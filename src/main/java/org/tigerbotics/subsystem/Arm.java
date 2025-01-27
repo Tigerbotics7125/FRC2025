@@ -25,7 +25,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tigerbotics.Robot;
 
@@ -134,10 +133,7 @@ public class Arm extends SubsystemBase {
         kPIDController.setGoal(goal);
     }
 
-    /**
-     *
-     * @return A Command which will run the PID controller and control the motor.
-     */
+    /** @return A Command which will run the PID controller and control the motor. */
     public Command runPID() {
         return run(
                 () -> {
@@ -147,10 +143,7 @@ public class Arm extends SubsystemBase {
                 });
     }
 
-    /**
-     *
-     * @return A Command which will disable motor output.
-     */
+    /** @return A Command which will disable motor output. */
     public Command disable() {
         return run(() -> m_motor.disable());
     }
