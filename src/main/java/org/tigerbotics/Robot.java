@@ -63,6 +63,9 @@ public class Robot extends TimedRobot {
 
         // By default, we want the arm to run PID control.
         m_arm.setDefaultCommand(m_arm.runPID());
+
+        // By default, we want the elevator to run PID control.
+        m_elev.setDefaultCommand(m_elev.runPID());
     }
 
     @Override
@@ -73,6 +76,7 @@ public class Robot extends TimedRobot {
         // tune one subsystem at a time.
         if (Robot.isReal()) {
             m_arm.disable().schedule();
+            m_elev.disable().schedule();
         }
     }
 
