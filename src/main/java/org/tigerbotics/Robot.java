@@ -9,21 +9,43 @@ import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import org.tigerbotics.subsystem.Drivetrain;
-import org.tigerbotics.subsystem.Odometry;
-import org.tigerbotics.subsystem.Vision;
+import org.tigerbotics.constant.SuperStructConsts.SuperStructState;
+import org.tigerbotics.subsystem.*;
 
 @Logged
 public class Robot extends TimedRobot {
+
+    // These are used for logs so we can track down issues if needed.
+    @SuppressWarnings("unused")
+    private final String kGitSHA = BuildConstants.GIT_SHA;
+
+    @SuppressWarnings("unused")
+    private final String kGitBranch = BuildConstants.GIT_BRANCH;
+
+    @SuppressWarnings("unused")
+    private final String kGitDate = BuildConstants.GIT_DATE;
+
+    @SuppressWarnings("unused")
+    private final String kBuildDate = BuildConstants.BUILD_DATE;
 
     private final Drivetrain m_drivetrain = new Drivetrain();
     private final Vision m_vision = new Vision();
 
     private final Odometry m_odometry = new Odometry(m_drivetrain, m_vision);
 
+    private final Elevator m_elev = new Elevator();
+    private final Arm m_arm = new Arm();
+
+    private final SuperStructure m_superStructure = new SuperStructure(m_elev, m_arm);
+
     private final CommandXboxController m_driver = new CommandXboxController(0);
+
+    public static double currentDrawSim = 0.0;
+    public static double vInSim = 12.0;
 
     @Override
     public void robotInit() {
@@ -31,7 +53,9 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         Epilogue.bind(this);
 
-        // Setup subsystem default commands
+        configureButtonBindings();
+
+        // By default, we want to be driving the drivetrain lol.
         m_drivetrain.setDefaultCommand(
                 m_drivetrain.driveCommand(
                         () -> -m_driver.getLeftY(),
@@ -39,11 +63,29 @@ public class Robot extends TimedRobot {
                         m_driver::getRightX,
                         m_driver::getRightY,
                         () -> true));
+
+        // By default, we want the arm to run PID control.
+        m_arm.setDefaultCommand(m_arm.runPID());
+
+        // By default, we want the elevator to run PID control.
+        m_elev.setDefaultCommand(m_elev.runPID());
+    }
+
+    private void configureButtonBindings() {
+        m_driver.a().onTrue(m_superStructure.setState(SuperStructState.START));
+        m_driver.b().onTrue(m_superStructure.setState(SuperStructState.DEMO));
     }
 
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
+
+        // TODO: Bring subsystems online outside of sim, please reset all PID values to zero and
+        // tune one subsystem at a time.
+        if (Robot.isReal()) {
+            m_arm.disable().schedule();
+            m_elev.disable().schedule();
+        }
     }
 
     @Override
@@ -63,4 +105,19 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {}
+
+    @Override
+    public void simulationInit() {}
+
+    @Override
+    public void simulationPeriodic() {
+        // Calculate new battery voltage.
+        vInSim = BatterySim.calculateDefaultBatteryLoadedVoltage(currentDrawSim);
+        // Set Rio voltage & current
+        // (I think this makes brownout and wpilog work but I'm not sure)
+        RoboRioSim.setVInVoltage(vInSim);
+        RoboRioSim.setVInCurrent(currentDrawSim);
+        // Reset current draw.
+        currentDrawSim = 0.0;
+    }
 }

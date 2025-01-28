@@ -32,15 +32,14 @@ import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+import org.tigerbotics.Robot;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
@@ -94,7 +93,7 @@ public class Drivetrain extends SubsystemBase {
                         : kLeftMotorsConfig;
         REVLibError response =
                 motor.configure(
-                        config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+                        config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         // Raise alert if config failed.
         kMotorConfigAlert.set(response != REVLibError.kOk);
     }
@@ -104,15 +103,9 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        double vIn = RoboRioSim.getVInVoltage();
-        double accumCurrent = 0;
-
         for (int i = 0; i < 4; i++) {
-            // Breaks sim, ask me how I know.
-            if (vIn == 0) break;
-
             // Update the motor sim
-            m_motorSims.get(i).setInputVoltage(m_motors.get(i).getAppliedOutput() * vIn);
+            m_motorSims.get(i).setInputVoltage(m_motors.get(i).getAppliedOutput() * Robot.vInSim);
             m_motorSims.get(i).update(0.02);
             // update the spark values from sim
             m_sparkSims
@@ -121,14 +114,11 @@ public class Drivetrain extends SubsystemBase {
                             m_motorSims.get(i).getAngularVelocityRPM()
                                     / 60.0
                                     * kWheelCircumference.in(Meters),
-                            vIn,
+                            Robot.vInSim,
                             0.02);
             // Add the current draw to the sim.
-            accumCurrent += m_sparkSims.get(i).getMotorCurrent();
+            Robot.currentDrawSim += m_sparkSims.get(i).getMotorCurrent();
         }
-
-        // Set the calculated voltage to the system.
-        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(accumCurrent));
 
         // Get the change in angle (Euler's Method)
         double deltaOmega =
