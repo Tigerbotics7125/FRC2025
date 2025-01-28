@@ -86,7 +86,8 @@ public class Elevator extends SubsystemBase {
         if (closedLoopIEntry.readQueue().length != 0) kPIDController.setI(closedLoopIEntry.get());
         if (closedLoopDEntry.readQueue().length != 0) kPIDController.setD(closedLoopDEntry.get());
 
-        setGoal(new TrapezoidProfile.State(setpointEntry.get(), 0));
+        if (setpointEntry.readQueue().length != 0)
+            setGoal(new TrapezoidProfile.State(setpointEntry.get(), 0));
     }
 
     @Override

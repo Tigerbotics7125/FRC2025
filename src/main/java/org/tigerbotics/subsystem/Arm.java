@@ -68,9 +68,7 @@ public class Arm extends SubsystemBase {
     }
 
     @Override
-    public void simulationPeriodic() {
-
-        // sim variable tuner.
+    public void periodic() {
         if (maxVelEntry.readQueue().length != 0)
             kPIDController.setConstraints(
                     new TrapezoidProfile.Constraints(
@@ -84,9 +82,12 @@ public class Arm extends SubsystemBase {
         if (closedLoopIEntry.readQueue().length != 0) kPIDController.setI(closedLoopIEntry.get());
         if (closedLoopDEntry.readQueue().length != 0) kPIDController.setD(closedLoopDEntry.get());
 
-        setGoal(new TrapezoidProfile.State(setpointEntry.get(), 0));
+        if (setpointEntry.readQueue().length != 0)
+            setGoal(new TrapezoidProfile.State(setpointEntry.get(), 0));
+    }
 
-        // Sim logic.
+    @Override
+    public void simulationPeriodic() {
         m_armSim.setInputVoltage(m_motorSim.getAppliedOutput() * Robot.vInSim);
         m_armSim.update(0.02);
 

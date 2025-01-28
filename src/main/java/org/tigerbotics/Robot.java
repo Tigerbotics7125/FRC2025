@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import org.tigerbotics.constant.SuperStructConsts.SuperStructState;
 import org.tigerbotics.subsystem.*;
 
 @Logged
@@ -52,6 +53,8 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         Epilogue.bind(this);
 
+        configureButtonBindings();
+
         // By default, we want to be driving the drivetrain lol.
         m_drivetrain.setDefaultCommand(
                 m_drivetrain.driveCommand(
@@ -66,6 +69,11 @@ public class Robot extends TimedRobot {
 
         // By default, we want the elevator to run PID control.
         m_elev.setDefaultCommand(m_elev.runPID());
+    }
+
+    private void configureButtonBindings() {
+        m_driver.a().onTrue(m_superStructure.setState(SuperStructState.START));
+        m_driver.b().onTrue(m_superStructure.setState(SuperStructState.DEMO));
     }
 
     @Override
