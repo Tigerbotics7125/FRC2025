@@ -40,9 +40,9 @@ public class VisionConsts {
     // Innomaker OV9281 USB
     static {
         kCameraProps.setCalibration(1280, 800, Rotation2d.fromDegrees(148));
-        kCameraProps.setCalibError(0.25, 0.08);
-        kCameraProps.setFPS(62);
-        kCameraProps.setAvgLatencyMs(14);
+        kCameraProps.setCalibError(1.5, 0.08);
+        kCameraProps.setFPS(45);
+        kCameraProps.setAvgLatencyMs(20);
         kCameraProps.setLatencyStdDevMs(5);
     }
 }

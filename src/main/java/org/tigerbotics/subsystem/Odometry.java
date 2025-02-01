@@ -6,8 +6,10 @@
 package org.tigerbotics.subsystem;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.MecanumDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -37,7 +39,11 @@ public class Odometry extends SubsystemBase {
                         DriveConsts.kKinematics,
                         m_drivetrain.getRotation2d(),
                         m_drivetrain.getWheelPositions(),
-                        new Pose2d());
+                        new Pose2d(),
+                        // TODO: these will need to be tuned better, but currently trust vision a
+                        // little more than wheels.
+                        VecBuilder.fill(0.3, 0.3, 0.1),
+                        VecBuilder.fill(0.15, 0.15, 0.15));
 
         m_simOdometry =
                 new MecanumDriveOdometry(
@@ -87,6 +93,11 @@ public class Odometry extends SubsystemBase {
     /** @return The current best estimation of the robot's position. */
     public Pose2d getPose2d() {
         return m_poseEstimator.getEstimatedPosition();
+    }
+
+    /** @return The current best estimation of the robot's rotation. */
+    public Rotation2d getRotation2d() {
+        return m_poseEstimator.getEstimatedPosition().getRotation();
     }
 
     /**

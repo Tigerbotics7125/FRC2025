@@ -11,11 +11,8 @@ import static org.tigerbotics.constant.DriveConsts.Simulation.*;
 
 import com.revrobotics.REVLibError;
 import com.revrobotics.sim.SparkMaxSim;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -26,19 +23,17 @@ import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.first.wpilibj.drive.MecanumDrive.WheelSpeeds;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 import org.tigerbotics.Robot;
 
 @Logged
@@ -52,8 +47,6 @@ public class Drivetrain extends SubsystemBase {
 
     // Feedforward control
     private final SimpleMotorFeedforward m_feedForward = kFeedforward;
-
-    private final boolean m_fieldOriented = kDefaultFieldOriented;
 
     public Drivetrain() {
         // Motors will always be in order: FL, FR, RL, RR.
@@ -132,32 +125,6 @@ public class Drivetrain extends SubsystemBase {
         angle.set(m_navx.getYaw() + deltaOmega);
     }
 
-    public void drive(Translation2d translation, Rotation2d rotation, boolean openLoop) {
-
-        // If field oriented, then rotate the translation to match robot orientation.
-        if (m_fieldOriented) translation = translation.rotateBy(getRotation2d());
-
-        // Currently not implementing a PID on heading, if/when that occurs the full rotation will
-        // be useful,
-        // See 2023 drivetrain code for info, implementation wasn't great but it should be a good
-        // starting point.
-        double thetaSpeed = rotation.getSin();
-        // System.out.println(translation.getX() + " " + translation.getY() + " " + thetaSpeed);
-
-        if (openLoop) {
-            setOpenLoopSpeeds(
-                    MecanumDrive.driveCartesianIK(
-                            translation.getX(), translation.getY(), thetaSpeed));
-        } else {
-            // For closed loop, scale duty cycle values to velocity values.
-            translation = translation.times(kMaxLinearVelocity.in(MetersPerSecond));
-            thetaSpeed = thetaSpeed * kMaxAngularVelocity.in(RadiansPerSecond);
-
-            setTargetChassisSpeeds(
-                    new ChassisSpeeds(translation.getX(), translation.getY(), thetaSpeed));
-        }
-    }
-
     // ~ Getters
 
     public Rotation2d getRotation2d() {
@@ -197,36 +164,22 @@ public class Drivetrain extends SubsystemBase {
      * @param targetSpeeds
      */
     public void setTargetChassisSpeeds(ChassisSpeeds targetChassisSpeed) {
-        setClosedLoopSpeeds(kKinematics.toWheelSpeeds(targetChassisSpeed));
-    }
+        // TODO: Yes... ik we should be doing closed loop, but we should really be doing alot of
+        // things, such as not using mecanum, so this is going to have to do for now. Spark MAX PID
+        // still seems to be a pain for me, maybe it's just simulation that doesn't like me, idk.
+        // but basically I don't feel like properly implementing closed loop wheel control at the
+        // moment so we're just going to stick with open loop and a sub-optimal mecanum drive so we
+        // can focus on solving other problems atm.
+        double flDuty, frDuty, rlDuty, rrDuty;
 
-    /**
-     * Set the target wheel speeds to be achieved by each wheel. Uses the built in PID controller on
-     * the SparkMAX.
-     *
-     * @param targetWheelSpeeds
-     */
-    public void setClosedLoopSpeeds(MecanumDriveWheelSpeeds targetWheelSpeeds) {
-        // Make sure all of the speeds are atainable.
-        targetWheelSpeeds.desaturate(kMaxLinearVelocity);
+        MecanumDriveWheelSpeeds ws = kKinematics.toWheelSpeeds(targetChassisSpeed);
 
-        List<Double> wheelSpeeds =
-                List.of(
-                        targetWheelSpeeds.frontLeftMetersPerSecond,
-                        targetWheelSpeeds.frontRightMetersPerSecond,
-                        targetWheelSpeeds.rearLeftMetersPerSecond,
-                        targetWheelSpeeds.rearRightMetersPerSecond);
+        flDuty = ws.frontLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
+        frDuty = ws.frontRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
+        rlDuty = ws.rearLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
+        rrDuty = ws.rearRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
 
-        for (int i = 0; i < 4; i++) {
-            m_motors.get(i)
-                    .getClosedLoopController()
-                    .setReference(
-                            wheelSpeeds.get(i),
-                            ControlType.kMAXMotionVelocityControl,
-                            ClosedLoopSlot.kSlot0,
-                            m_feedForward.calculate(wheelSpeeds.get(i)),
-                            ArbFFUnits.kVoltage);
-        }
+        setOpenLoopSpeeds(new WheelSpeeds(flDuty, frDuty, rlDuty, rrDuty));
     }
 
     /**
@@ -252,21 +205,5 @@ public class Drivetrain extends SubsystemBase {
     /** @return A Command which disables all motors. */
     public Command disable() {
         return runOnce(() -> m_motors.forEach(SparkMax::disable));
-    }
-
-    public Command driveCommand(
-            DoubleSupplier xTranslation,
-            DoubleSupplier yTranslation,
-            DoubleSupplier cosRotation,
-            DoubleSupplier sinRotation,
-            BooleanSupplier openLoop) {
-        return run(
-                () ->
-                        drive(
-                                new Translation2d(
-                                        xTranslation.getAsDouble(), yTranslation.getAsDouble()),
-                                new Rotation2d(
-                                        cosRotation.getAsDouble(), sinRotation.getAsDouble()),
-                                openLoop.getAsBoolean()));
     }
 }

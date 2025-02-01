@@ -23,12 +23,16 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import org.tigerbotics.util.DriveConfig;
+import org.tigerbotics.util.DriveConfig.RobotOrientation;
 
 public class DriveConsts {
 
+    public static final DriveConfig kDefaultDriveConfig =
+            new DriveConfig().withRobotOrientation(RobotOrientation.kFieldOriented);
+
     // Default driving behavior control values
     public static final IdleMode kDefaultIdleMode = IdleMode.kCoast;
-    public static final boolean kDefaultFieldOriented = true;
 
     public static final Alert kMotorConfigAlert =
             new Alert(

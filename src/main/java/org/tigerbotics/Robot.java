@@ -13,8 +13,10 @@ import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import org.tigerbotics.constant.DriveConsts;
 import org.tigerbotics.constant.SuperStructConsts.SuperStructState;
 import org.tigerbotics.subsystem.*;
+import org.tigerbotics.util.DriveAssist;
 
 @Logged
 public class Robot extends TimedRobot {
@@ -36,6 +38,8 @@ public class Robot extends TimedRobot {
     private final Vision m_vision = new Vision();
 
     private final Odometry m_odometry = new Odometry(m_drivetrain, m_vision);
+    private final DriveAssist m_driveAssist =
+            new DriveAssist(m_drivetrain, m_odometry, DriveConsts.kDefaultDriveConfig);
 
     private final Elevator m_elev = new Elevator();
     private final Arm m_arm = new Arm();
@@ -57,12 +61,11 @@ public class Robot extends TimedRobot {
 
         // By default, we want to be driving the drivetrain lol.
         m_drivetrain.setDefaultCommand(
-                m_drivetrain.driveCommand(
+                m_driveAssist.driveAssistCmd(
                         () -> -m_driver.getLeftY(),
                         m_driver::getLeftX,
                         m_driver::getRightX,
-                        m_driver::getRightY,
-                        () -> true));
+                        () -> false));
 
         // By default, we want the arm to run PID control.
         m_arm.setDefaultCommand(m_arm.runPID());
