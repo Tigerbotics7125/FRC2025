@@ -96,6 +96,8 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
+        if (Robot.vInSim < 0) return;
+
         for (int i = 0; i < 4; i++) {
             // Update the motor sim
             m_motorSims.get(i).setInputVoltage(m_motors.get(i).getAppliedOutput() * Robot.vInSim);
@@ -122,7 +124,7 @@ public class Drivetrain extends SubsystemBase {
         // Update the NavX angle
         int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[4]");
         SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
-        angle.set(m_navx.getYaw() + deltaOmega);
+        angle.set(m_navx.getYaw() - deltaOmega);
     }
 
     // ~ Getters

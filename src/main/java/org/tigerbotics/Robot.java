@@ -5,6 +5,7 @@
  */
 package org.tigerbotics;
 
+import com.pathplanner.lib.commands.FollowPathCommand;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -72,6 +73,9 @@ public class Robot extends TimedRobot {
 
         // By default, we want the elevator to run PID control.
         m_elev.setDefaultCommand(m_elev.runPID());
+
+        // pre-load pathplanner classes. stupid Java.
+        FollowPathCommand.warmupCommand().schedule();
     }
 
     private void configureButtonBindings() {

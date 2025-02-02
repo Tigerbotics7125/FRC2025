@@ -5,12 +5,16 @@
  */
 package org.tigerbotics.util;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+import org.tigerbotics.command.ReefAlignAssist;
 import org.tigerbotics.subsystem.Drivetrain;
 import org.tigerbotics.subsystem.Odometry;
 import org.tigerbotics.util.DriveConfig.RobotOrientation;
@@ -19,10 +23,11 @@ import org.tigerbotics.util.DriveConfig.RobotOrientation;
  * This class serves as the base for driving assistance commands, which are all merged into one
  * super command.
  */
+@Logged
 public class DriveAssist {
 
-    private final Drivetrain m_drive;
-    private final Odometry m_odom;
+    @NotLogged private final Drivetrain m_drive;
+    @NotLogged private final Odometry m_odom;
     private final DriveConfig m_config;
 
     private Translation2d m_translation = new Translation2d();
@@ -32,6 +37,34 @@ public class DriveAssist {
         m_drive = drivetrain;
         m_odom = odometry;
         m_config = config;
+    }
+
+    public Drivetrain getDrivetrain() {
+        return m_drive;
+    }
+
+    public Odometry getOdometry() {
+        return m_odom;
+    }
+
+    public DriveConfig getConfig() {
+        return m_config;
+    }
+
+    public Translation2d getTranslation() {
+        return m_translation;
+    }
+
+    public void addTranslation(Translation2d translation) {
+        m_translation = m_translation.plus(translation);
+    }
+
+    public double getTheta() {
+        return m_theta;
+    }
+
+    public void addTheta(double theta) {
+        m_theta += theta;
     }
 
     /**
@@ -48,7 +81,9 @@ public class DriveAssist {
         return Commands.sequence(
                         acceptHumanInputs(robotX, robotY, robotZ),
                         Commands.either(
-                                Commands.sequence(reefAligner()), Commands.none(), manualOverride),
+                                Commands.none(),
+                                Commands.sequence(new ReefAlignAssist(this).getCommand()),
+                                manualOverride),
                         output())
                 .repeatedly();
     }
@@ -61,10 +96,16 @@ public class DriveAssist {
      */
     public Command output() {
         return Commands.runOnce(
-                () ->
-                        m_drive.setOpenLoopSpeeds(
-                                MecanumDrive.driveCartesianIK(
-                                        m_translation.getX(), m_translation.getY(), m_theta)),
+                () -> {
+                    // clamp outputs.
+                    double x = MathUtil.clamp(m_translation.getX(), -1, 1);
+                    double y = MathUtil.clamp(m_translation.getY(), -1, 1);
+                    double theta = MathUtil.clamp(m_theta, -1, 1);
+
+                    System.out.println(x + " " + y + " " + theta);
+
+                    m_drive.setOpenLoopSpeeds(MecanumDrive.driveCartesianIK(x, y, theta));
+                },
                 m_drive);
     }
 
@@ -85,22 +126,11 @@ public class DriveAssist {
                     m_translation = new Translation2d(robotX.getAsDouble(), robotY.getAsDouble());
 
                     // If field oriented, then rotate the translation to match robot orientation.
-                    if (m_config.getRobotOrientation() == RobotOrientation.kFieldOriented) {
-                        m_translation = m_translation.rotateBy(m_odom.getRotation2d());
+                    if (m_config.robotOrientation() == RobotOrientation.kFieldOriented) {
+                        m_translation = m_translation.rotateBy(m_drive.getRotation2d());
                     }
 
                     m_theta = robotZ.getAsDouble();
                 });
-    }
-
-    public Command reefAligner() {
-        // First, we need to create a vector which points towards the center of the reef.
-
-
-
-        // TODO: I'll be back
-
-
-        return Commands.none();
     }
 }
