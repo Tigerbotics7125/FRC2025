@@ -21,8 +21,8 @@
         },
         {},
         {
-          "decKey": 263,
-          "incKey": 262
+          "decKey": 262,
+          "incKey": 263
         },
         {
           "decKey": 265,
@@ -93,5 +93,6 @@
     {
       "guid": "Keyboard0"
     }
-  ]
+  ],
+  "useEnableDisableHotkeys": true
 }

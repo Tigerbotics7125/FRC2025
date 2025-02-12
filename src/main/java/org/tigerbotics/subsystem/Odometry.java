@@ -6,13 +6,16 @@
 package org.tigerbotics.subsystem;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.MecanumDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.tigerbotics.Robot;
 import org.tigerbotics.constant.DriveConsts;
 
 @Logged
@@ -37,7 +40,11 @@ public class Odometry extends SubsystemBase {
                         DriveConsts.kKinematics,
                         m_drivetrain.getRotation2d(),
                         m_drivetrain.getWheelPositions(),
-                        new Pose2d());
+                        new Pose2d(),
+                        // TODO: these will need to be tuned better, but currently trust vision a
+                        // little more than wheels.
+                        VecBuilder.fill(0.3, 0.3, 0.1),
+                        VecBuilder.fill(0.15, 0.15, 0.15));
 
         m_simOdometry =
                 new MecanumDriveOdometry(
@@ -55,8 +62,6 @@ public class Odometry extends SubsystemBase {
                 m_drivetrain.getRotation2d(),
                 m_drivetrain.getWheelPositions());
 
-        // TODO: Some tuning on which poses to accept is probably required.
-
         /**
          * This is just a really fancy way to iterate through the list of estimated poses, check if
          * it is present, if so, add it to the pose estimator, otherwise do nothing.
@@ -65,10 +70,30 @@ public class Odometry extends SubsystemBase {
                 .forEach(
                         (potentialVisionPose) ->
                                 potentialVisionPose.ifPresentOrElse(
-                                        (visionPose) ->
+                                        (visionPose) -> {
+                                            Pose2d estimatedPose =
+                                                    visionPose.estimatedPose.toPose2d();
+                                            double distanceFromCurrentPose =
+                                                    estimatedPose
+                                                            .minus(getPose2d())
+                                                            .getTranslation()
+                                                            .toVector()
+                                                            .norm();
+
+                                            // TODO: this can go bad if the pose ever gets > 0.5m
+                                            // off
+                                            // Perhaps a running average of normals of the vision
+                                            // estimation so if they're close still add them.
+
+                                            // Only add the pose if it is within 0.5m of the current
+                                            // pose estimation.
+                                            if (distanceFromCurrentPose < 0.5) {
+
                                                 m_poseEstimator.addVisionMeasurement(
                                                         visionPose.estimatedPose.toPose2d(),
-                                                        visionPose.timestampSeconds),
+                                                        visionPose.timestampSeconds);
+                                            }
+                                        },
                                         () -> {}));
 
         // Set the robot position on the field (for dashboard / sim).
@@ -86,7 +111,16 @@ public class Odometry extends SubsystemBase {
 
     /** @return The current best estimation of the robot's position. */
     public Pose2d getPose2d() {
-        return m_poseEstimator.getEstimatedPosition();
+        if (Robot.isReal()) {
+            return m_poseEstimator.getEstimatedPosition();
+        } else {
+            return m_simOdometry.getPoseMeters();
+        }
+    }
+
+    /** @return The current best estimation of the robot's rotation. */
+    public Rotation2d getRotation2d() {
+        return m_poseEstimator.getEstimatedPosition().getRotation();
     }
 
     /**
@@ -96,5 +130,10 @@ public class Odometry extends SubsystemBase {
      */
     public void setPose2d(Pose2d currentPose) {
         m_poseEstimator.resetPose(currentPose);
+        m_simOdometry.resetPose(currentPose);
+    }
+
+    public Field2d getField2d() {
+        return m_field;
     }
 }
