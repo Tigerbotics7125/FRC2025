@@ -5,12 +5,18 @@
  */
 package org.tigerbotics.util;
 
-import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Feet;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.units.measure.Distance;
 
-public class DriveConfig {
+/**
+ * I know this should probably just be a constant file but I wanted it to be able to be changed on
+ * the fly, so I need it mutable.
+ */
+@Logged
+public class DriveAssistConfig {
     /** Defines which direction the robot assumes forwards to be. */
     public enum RobotOrientation {
         // Assumes that forward is away from the driver station.
@@ -19,15 +25,21 @@ public class DriveConfig {
         kRobotOriented;
     }
 
-    public class ReefAlignAssistConfig {
+    @Logged
+    public class AutoAlignAssistConfig {
         private boolean assistanceEnabled = true;
-        private double minDotProduct = 0.5;
-        private Distance maxDistanceToReef = Meters.of(2);
+        private double minDotProduct = 0.15;
+        private Distance maxDistanceToTarget = Feet.of(3);
         private PIDController translationPID = new PIDController(2.0, 0.0, 0.0);
         private PIDController rotationPID = new PIDController(0.01, 0.0, 0.0);
 
+        // Make sure default PID is continuous.
+        {
+            rotationPID.enableContinuousInput(0, 360);
+        }
+
         /** @param assistanceEnabled Whether to enable this assistance or not. */
-        public ReefAlignAssistConfig withAssistanceEnabled(boolean assistanceEnabled) {
+        public AutoAlignAssistConfig withAssistanceEnabled(boolean assistanceEnabled) {
             this.assistanceEnabled = assistanceEnabled;
             return this;
         }
@@ -40,7 +52,7 @@ public class DriveConfig {
          * @param minDotProduct The minimum dot product value to ensure the driver is intending to
          *     go towards the reef.
          */
-        public ReefAlignAssistConfig withMinDotProduct(double minDotProduct) {
+        public AutoAlignAssistConfig withMinDotProduct(double minDotProduct) {
             this.minDotProduct = minDotProduct;
             return this;
         }
@@ -50,20 +62,20 @@ public class DriveConfig {
         }
 
         /**
-         * @param minDistanceToReef The robot must be this close to the reef before the assistance
-         *     will enable.
+         * @param minDistanceToTarget The robot must be this close to the target before the
+         *     assistance will enable.
          */
-        public ReefAlignAssistConfig withMaxDistanceToReef(Distance minDistanceToReef) {
-            this.maxDistanceToReef = minDistanceToReef;
+        public AutoAlignAssistConfig withMaxDistanceToTarget(Distance minDistanceToTarget) {
+            this.maxDistanceToTarget = minDistanceToTarget;
             return this;
         }
 
-        public Distance maxDistanceToReef() {
-            return maxDistanceToReef;
+        public Distance maxDistanceToTarget() {
+            return maxDistanceToTarget;
         }
 
         /** @param translationPID The translational PIDController. */
-        public ReefAlignAssistConfig withTranslationPID(PIDController translationPID) {
+        public AutoAlignAssistConfig withTranslationPID(PIDController translationPID) {
             this.translationPID = translationPID;
             return this;
         }
@@ -73,8 +85,9 @@ public class DriveConfig {
         }
 
         /** @param rotationPID The rotational PIDController. */
-        public ReefAlignAssistConfig withRotationPID(PIDController rotationPID) {
+        public AutoAlignAssistConfig withRotationPID(PIDController rotationPID) {
             this.rotationPID = rotationPID;
+            rotationPID.enableContinuousInput(0, 360);
             return this;
         }
 
@@ -86,9 +99,9 @@ public class DriveConfig {
     // Defines how the controllers forward direction should be interpreted by the drivetrain.
     private RobotOrientation robotOrientation = RobotOrientation.kRobotOriented;
     // Configurations related to the reef align assistance feature.
-    private ReefAlignAssistConfig reefAlignAssist = new ReefAlignAssistConfig();
+    private AutoAlignAssistConfig reefAlignAssist = new AutoAlignAssistConfig();
 
-    public DriveConfig withRobotOrientation(RobotOrientation robotOrientation) {
+    public DriveAssistConfig withRobotOrientation(RobotOrientation robotOrientation) {
         this.robotOrientation = robotOrientation;
         return this;
     }
@@ -97,12 +110,12 @@ public class DriveConfig {
         return robotOrientation;
     }
 
-    public DriveConfig withReefAlignAssist(ReefAlignAssistConfig reefAlignAssist) {
+    public DriveAssistConfig withReefAlignAssist(AutoAlignAssistConfig reefAlignAssist) {
         this.reefAlignAssist = reefAlignAssist;
         return this;
     }
 
-    public ReefAlignAssistConfig reefAlignAssist() {
+    public AutoAlignAssistConfig reefAlignAssist() {
         return reefAlignAssist;
     }
 }

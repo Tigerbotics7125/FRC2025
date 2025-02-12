@@ -14,10 +14,10 @@ import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import org.tigerbotics.command.DriveAssist;
 import org.tigerbotics.constant.DriveConsts;
 import org.tigerbotics.constant.SuperStructConsts.SuperStructState;
 import org.tigerbotics.subsystem.*;
-import org.tigerbotics.util.DriveAssist;
 
 @Logged
 public class Robot extends TimedRobot {
@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
                         () -> -m_driver.getLeftY(),
                         m_driver::getLeftX,
                         m_driver::getRightX,
-                        () -> false));
+                        m_driver.rightBumper()));
 
         // By default, we want the arm to run PID control.
         m_arm.setDefaultCommand(m_arm.runPID());

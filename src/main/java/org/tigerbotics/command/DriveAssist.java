@@ -3,7 +3,7 @@
  * This work is licensed under the terms of the GNU GPLv3 license
  * found in the root directory of this project.
  */
-package org.tigerbotics.util;
+package org.tigerbotics.command;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -12,12 +12,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import java.util.function.BooleanSupplier;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
-import org.tigerbotics.command.ReefAlignAssist;
 import org.tigerbotics.subsystem.Drivetrain;
 import org.tigerbotics.subsystem.Odometry;
-import org.tigerbotics.util.DriveConfig.RobotOrientation;
+import org.tigerbotics.util.DriveAssistConfig;
+import org.tigerbotics.util.DriveAssistConfig.RobotOrientation;
 
 /**
  * This class serves as the base for driving assistance commands, which are all merged into one
@@ -28,12 +28,12 @@ public class DriveAssist {
 
     @NotLogged private final Drivetrain m_drive;
     @NotLogged private final Odometry m_odom;
-    private final DriveConfig m_config;
+    private final DriveAssistConfig m_config;
 
     private Translation2d m_translation = new Translation2d();
     private double m_theta = 0.0;
 
-    public DriveAssist(Drivetrain drivetrain, Odometry odometry, DriveConfig config) {
+    public DriveAssist(Drivetrain drivetrain, Odometry odometry, DriveAssistConfig config) {
         m_drive = drivetrain;
         m_odom = odometry;
         m_config = config;
@@ -47,7 +47,7 @@ public class DriveAssist {
         return m_odom;
     }
 
-    public DriveConfig getConfig() {
+    public DriveAssistConfig getConfig() {
         return m_config;
     }
 
@@ -76,14 +76,12 @@ public class DriveAssist {
             DoubleSupplier robotX,
             DoubleSupplier robotY,
             DoubleSupplier robotZ,
-            BooleanSupplier manualOverride) {
+            Trigger manualOverride) {
 
         return Commands.sequence(
                         acceptHumanInputs(robotX, robotY, robotZ),
-                        Commands.either(
-                                Commands.none(),
-                                Commands.sequence(new ReefAlignAssist(this).getCommand()),
-                                manualOverride),
+                        Commands.sequence(new AutoAlignAssist(this).getCommand())
+                                .onlyIf(manualOverride.negate()),
                         output())
                 .repeatedly();
     }
@@ -102,8 +100,6 @@ public class DriveAssist {
                     double y = MathUtil.clamp(m_translation.getY(), -1, 1);
                     double theta = MathUtil.clamp(m_theta, -1, 1);
 
-                    System.out.println(x + " " + y + " " + theta);
-
                     m_drive.setOpenLoopSpeeds(MecanumDrive.driveCartesianIK(x, y, theta));
                 },
                 m_drive);
@@ -121,16 +117,26 @@ public class DriveAssist {
             DoubleSupplier robotX, DoubleSupplier robotY, DoubleSupplier robotZ) {
         return Commands.runOnce(
                 () -> {
-                    // TODO: If we re-implement closed-loop later, just find the code in git
-                    // history.
-                    m_translation = new Translation2d(robotX.getAsDouble(), robotY.getAsDouble());
+                    // Apply deadband to set the inputs to zero when they are close.
+                    double x = MathUtil.applyDeadband(robotX.getAsDouble(), 0.05);
+                    double y = MathUtil.applyDeadband(robotY.getAsDouble(), 0.05);
+                    double z = MathUtil.applyDeadband(robotZ.getAsDouble(), 0.05);
+                    // Apply a cubic curve to allow for more fine-grain control at lower speeds.
+                    // (This preserves sign, because math).
+                    x = Math.pow(x, 3);
+                    y = Math.pow(y, 3);
+                    z = Math.pow(z, 3);
+
+                    // Convert XY to a translation because it makes math easier.
+                    m_translation = new Translation2d(x, y);
 
                     // If field oriented, then rotate the translation to match robot orientation.
                     if (m_config.robotOrientation() == RobotOrientation.kFieldOriented) {
                         m_translation = m_translation.rotateBy(m_drive.getRotation2d());
                     }
 
-                    m_theta = robotZ.getAsDouble();
+                    // The z rotation speed around theta.
+                    m_theta = z;
                 });
     }
 }
