@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import org.tigerbotics.command.DriveAssist;
@@ -48,6 +49,7 @@ public class Robot extends TimedRobot {
     private final SuperStructure m_superStructure = new SuperStructure(m_elev, m_arm);
 
     private final CommandXboxController m_driver = new CommandXboxController(0);
+    private final Autonomous auto = new Autonomous(m_drivetrain, m_odometry);
 
     public static double currentDrawSim = 0.0;
     public static double vInSim = 12.0;
@@ -66,7 +68,7 @@ public class Robot extends TimedRobot {
                         () -> -m_driver.getLeftY(),
                         m_driver::getLeftX,
                         m_driver::getRightX,
-                        m_driver.rightBumper()));
+                        m_driver.rightBumper().negate()));
 
         // By default, we want the arm to run PID control.
         m_arm.setDefaultCommand(m_arm.runPID());
@@ -96,7 +98,10 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void autonomousInit() {}
+    public void autonomousInit() {
+        Command autoCommand = auto.getAutonomousCommand();
+        autoCommand.schedule();
+    }
 
     @Override
     public void autonomousPeriodic() {}

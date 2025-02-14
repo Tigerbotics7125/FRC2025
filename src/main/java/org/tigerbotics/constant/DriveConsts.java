@@ -99,6 +99,8 @@ public class DriveConsts {
         // Limits the max current draw.
         config.smartCurrentLimit(80);
 
+        config.idleMode(IdleMode.kBrake);
+
         // Set the conversion factors, converting motor position and velocity (rotations
         // & RPM) to linear wheel position & valocity (meters & meters/second)
         config.encoder.positionConversionFactor(
