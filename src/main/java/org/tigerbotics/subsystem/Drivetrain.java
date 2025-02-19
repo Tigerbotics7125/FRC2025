@@ -181,6 +181,8 @@ public class Drivetrain extends SubsystemBase {
 
         MecanumDriveWheelSpeeds ws = kKinematics.toWheelSpeeds(targetChassisSpeed);
 
+        System.out.println(ws.toString());
+
         flDuty = ws.frontLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
         frDuty = ws.frontRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
         rlDuty = ws.rearLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
