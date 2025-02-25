@@ -14,29 +14,41 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
-    private final SparkMax m_left = new SparkMax(kLeftID, kMotorType);
-    private final SparkMax m_right = new SparkMax(kRightID, kMotorType);
+    private final SparkMax m_kicker = new SparkMax(kLeftID, kMotorType);
+    private final SparkMax m_sucker = new SparkMax(kRightID, kMotorType);
 
     public Intake() {
-        m_left.configure(
+        m_kicker.configure(
                 kLeftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        m_right.configure(
+        m_sucker.configure(
                 kRightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /** @return A Command which disables motor output. */
     public Command disable() {
-        return run(m_left::disable);
+        return run(() -> {
+            m_kicker.disable();
+            m_sucker.disable();
+        });
     }
 
     /** @return A Command which intakes. */
     public Command intake() {
-        return runOnce(() -> m_left.set(kIntakeSpeed));
+        return runOnce(() -> m_sucker.set(kIntakeSpeed));
+    }
+    public Command intakeStop(){
+        return run(m_sucker::disable);
+    }
+    public Command kick(){
+        return runOnce(() -> m_kicker.set(kKickSpeed));
+    }
+    public Command kickStop(){
+        return run(m_kicker::disable);
     }
 
     /** @return A Command which outtakes. */
     public Command outtake() {
-        return runOnce(() -> m_left.set(kOuttakeSpeed));
+        return runOnce(() -> m_sucker.set(kOuttakeSpeed));
     }
 
     // TODO: Look into automating intake sequences with current draw monitoring.
