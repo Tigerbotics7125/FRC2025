@@ -27,6 +27,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.drive.MecanumDrive.WheelSpeeds;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -63,6 +64,10 @@ public class Drivetrain extends SubsystemBase {
         // Create the navX using the SPI on the rio.
         m_navx = new AHRS(NavXComType.kMXP_SPI);
         // Raise alert if navX is not connected.
+        double start = Timer.getFPGATimestamp();
+        while (!m_navx.isConnected() && Timer.getFPGATimestamp() - start < 5.0) {
+            kNavXConnectAlert.set(!m_navx.isConnected());
+        }
         kNavXConnectAlert.set(!m_navx.isConnected());
     }
 
@@ -175,6 +180,8 @@ public class Drivetrain extends SubsystemBase {
         double flDuty, frDuty, rlDuty, rrDuty;
 
         MecanumDriveWheelSpeeds ws = kKinematics.toWheelSpeeds(targetChassisSpeed);
+
+        System.out.println(ws.toString());
 
         flDuty = ws.frontLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
         frDuty = ws.frontRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
