@@ -47,10 +47,12 @@ public class Robot extends TimedRobot {
 
     private final Elevator m_elev = new Elevator();
     private final Arm m_arm = new Arm();
-
+    private final Intake m_intake = new Intake();
+    
     private final SuperStructure m_superStructure = new SuperStructure(m_elev, m_arm);
 
     private final CommandXboxController m_driver = new CommandXboxController(0);
+    private final CommandXboxController m_operator = new CommandXboxController(1);
     private final Autonomous auto = new Autonomous(m_drivetrain, m_odometry);
 
     public static double currentDrawSim = 0.0;
@@ -82,6 +84,16 @@ public class Robot extends TimedRobot {
         // By default, we want the elevator to run PID control.
         m_elev.setDefaultCommand(m_elev.runPID());
 
+        m_intake.setDefaultCommand(m_intake.disable());
+
+        m_operator.rightBumper().onTrue(m_superStructure.setState(SuperStructState.GROUND));
+        m_operator.a().onTrue(m_superStructure.setState(SuperStructState.FIRST));
+        m_operator.x().onTrue(m_superStructure.setState(SuperStructState.SECOND));
+        m_operator.y().onTrue(m_superStructure.setState(SuperStructState.THIRD));
+        m_operator.b().onTrue(m_superStructure.setState(SuperStructState.FOURTH));
+
+        m_operator.leftBumper().whileTrue(m_intake.intake());
+        m_operator.leftTrigger().whileTrue(m_intake.kick());
         // pre-load pathplanner classes. stupid Java.
         FollowPathCommand.warmupCommand().schedule();
     }

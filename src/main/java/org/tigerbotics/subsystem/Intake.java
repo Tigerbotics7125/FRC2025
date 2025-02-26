@@ -34,13 +34,13 @@ public class Intake extends SubsystemBase {
 
     /** @return A Command which intakes. */
     public Command intake() {
-        return runOnce(() -> m_sucker.set(kIntakeSpeed));
+        return run(() -> m_sucker.set(kIntakeSpeed));
     }
     public Command intakeStop(){
         return run(m_sucker::disable);
     }
     public Command kick(){
-        return runOnce(() -> m_kicker.set(kKickSpeed));
+        return run(() -> m_kicker.set(kKickSpeed));
     }
     public Command kickStop(){
         return run(m_kicker::disable);

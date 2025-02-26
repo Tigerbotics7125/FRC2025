@@ -12,6 +12,7 @@ public class IntakeConsts {
 
     public static final double kIntakeSpeed = 0.25;
     public static final double kOuttakeSpeed = -0.5;
+    public static final double kKickSpeed  = 0.5;
 
     public static final int kLeftID = 31;
     public static final int kRightID = 32;

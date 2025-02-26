@@ -14,7 +14,13 @@ public class SuperStructConsts {
 
     public enum SuperStructState {
         START(Meters.of(0), Degrees.of(-90)),
-        DEMO(Meters.of(1), Degrees.of(30));
+        DEMO(Meters.of(1), Degrees.of(30)),
+        GROUND(Meters.of(0), Degrees.of(-90)),
+        FIRST(Meters.of(0), Degrees.of(-90)),
+        SECOND(Meters.of(0), Degrees.of(-90)),
+        THIRD(Meters.of(0), Degrees.of(-90)),
+        FOURTH(Meters.of(0), Degrees.of(-90));
+
 
         public final Distance elevDistance;
         public final Angle armAngle;
