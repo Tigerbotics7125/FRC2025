@@ -28,7 +28,7 @@ public class ArmConsts {
 
     // TODO: These were tuned for sim, obviously will be different IRL.
     public static final ProfiledPIDController kPIDController =
-            new ProfiledPIDController(1.0, 0.0, 0.025, new TrapezoidProfile.Constraints(45, 90));
+            new ProfiledPIDController(0.0, 0.0, 0.0, new TrapezoidProfile.Constraints(45, 90));
 
     // TODO: Figure out the actual gear ratio
     public static final Dimensionless kGearRatio = Rotations.of(100).div(Rotations.of(1));
