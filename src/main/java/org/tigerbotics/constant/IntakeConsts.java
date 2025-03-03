@@ -10,12 +10,12 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class IntakeConsts {
 
-    public static final double kIntakeSpeed = 0.25;
+    public static final double kIntakeSpeed = 0.75;
     public static final double kOuttakeSpeed = -0.5;
     public static final double kKickSpeed  = 0.5;
 
-    public static final int kLeftID = 31;
-    public static final int kRightID = 32;
+    public static final int kLeftID = 9;
+    public static final int kRightID = 8;
 
     // We're using NEOs
     public static final MotorType kMotorType = MotorType.kBrushless;
@@ -33,6 +33,6 @@ public class IntakeConsts {
         kRightConfig.apply(config);
 
         // Setup motor independent changes.
-        kRightConfig.follow(kLeftID, true);
+        //kRightConfig.follow(kLeftID, true);
     }
 }

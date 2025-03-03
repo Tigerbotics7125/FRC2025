@@ -5,9 +5,11 @@
  */
 package org.tigerbotics;
 
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -20,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import org.tigerbotics.command.DriveAssist;
 import org.tigerbotics.constant.DriveConsts;
+import org.tigerbotics.constant.SuperStructConsts;
 import org.tigerbotics.constant.SuperStructConsts.SuperStructState;
 import org.tigerbotics.subsystem.*;
 
@@ -73,6 +76,8 @@ public class Robot extends TimedRobot {
         }
 
         configureButtonBindings();
+
+        NamedCommands.registerCommand("firstStage",m_superStructure.setState(SuperStructState.FIRST));
         
         // By default, we want to be driving the drivetrain lol.
         m_drivetrain.setDefaultCommand(
@@ -92,6 +97,10 @@ public class Robot extends TimedRobot {
 
         m_operator.rightBumper().onTrue(m_superStructure.setState(SuperStructState.GROUND));
         m_operator.a().onTrue(m_superStructure.setState(SuperStructState.FIRST));
+        //m_operator.a().onTrue(Commands.run(() -> m_elev.setGoal(
+        //new TrapezoidProfile.State(0.5, 0)),m_elev));
+
+        m_operator.a().onTrue(Commands.print("First"));
         m_operator.x().onTrue(m_superStructure.setState(SuperStructState.SECOND));
         m_operator.y().onTrue(m_superStructure.setState(SuperStructState.THIRD));
         m_operator.b().onTrue(m_superStructure.setState(SuperStructState.FOURTH));
@@ -103,8 +112,10 @@ public class Robot extends TimedRobot {
     }
 
     private void configureButtonBindings() {
-        m_driver.a().onTrue(m_superStructure.setState(SuperStructState.START));
-        m_driver.b().onTrue(m_superStructure.setState(SuperStructState.DEMO));
+        /*m_driver.a().onTrue(m_superStructure.setState(SuperStructState.START));
+        m_driver.b().onTrue(m_superStructure.setState(SuperStructState.DEMO));*/
+        //m_driver.leftBumper().whileTrue(m_intake.intake());
+        //m_driver.leftTrigger().whileTrue(m_intake.kick());
     }
 
     @Override
@@ -114,7 +125,7 @@ public class Robot extends TimedRobot {
         // tune one subsystem at a time.
         if (Robot.isReal()) {
             m_arm.disable().schedule();
-            m_elev.disable().schedule();
+            //m_elev.disable().schedule();
         }
     }
 
@@ -128,7 +139,9 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {}
 
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        //m_superStructure.setState(SuperStructState.FIRST);
+    }
 
     @Override
     public void teleopPeriodic() {}

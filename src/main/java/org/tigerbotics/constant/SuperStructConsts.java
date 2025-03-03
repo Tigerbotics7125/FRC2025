@@ -13,13 +13,13 @@ import edu.wpi.first.units.measure.Distance;
 public class SuperStructConsts {
 
     public enum SuperStructState {
-        START(Meters.of(0), Degrees.of(-90)),
-        DEMO(Meters.of(1), Degrees.of(30)),
-        GROUND(Meters.of(0), Degrees.of(-90)),
-        FIRST(Meters.of(0), Degrees.of(-90)),
-        SECOND(Meters.of(0), Degrees.of(-90)),
-        THIRD(Meters.of(0), Degrees.of(-90)),
-        FOURTH(Meters.of(0), Degrees.of(-90));
+        START(Meters.of(0), Degrees.of(0)),
+        DEMO(Meters.of(1), Degrees.of(0)),
+        GROUND(Meters.of(0), Degrees.of(0)),
+        FIRST(Meters.of(.5), Degrees.of(0)),
+        SECOND(Meters.of(1), Degrees.of(0)),
+        THIRD(Meters.of(1.25), Degrees.of(0)),
+        FOURTH(Meters.of(1.5), Degrees.of(0));
 
 
         public final Distance elevDistance;

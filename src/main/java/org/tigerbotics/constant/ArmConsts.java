@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class ArmConsts {
 
-    public static final int kMotorID = 21;
+    public static final int kMotorID = 7;
 
     public static final Alert kConfigAlert =
             new Alert(
