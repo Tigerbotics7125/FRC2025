@@ -21,7 +21,6 @@ public class SuperStructConsts {
         THIRD(Meters.of(1.25), Degrees.of(0)),
         FOURTH(Meters.of(1.5), Degrees.of(0));
 
-
         public final Distance elevDistance;
         public final Angle armAngle;
 
