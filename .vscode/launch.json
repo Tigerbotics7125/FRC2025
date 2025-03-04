@@ -9,6 +9,13 @@
       "name": "Main",
       "request": "launch",
       "mainClass": "org.tigerbotics.Main",
+      "projectName": "FRC2025"
+    },
+    {
+      "type": "java",
+      "name": "Main",
+      "request": "launch",
+      "mainClass": "org.tigerbotics.Main",
       "projectName": "frc2025"
     },
     {
