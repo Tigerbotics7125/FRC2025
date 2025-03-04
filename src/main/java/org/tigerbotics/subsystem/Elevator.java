@@ -89,12 +89,12 @@ public class Elevator extends SubsystemBase {
 
         if (setpointEntry.readQueue().length != 0)
             setGoal(new TrapezoidProfile.State(setpointEntry.get(), 0));
-            //kPIDController.calculate(m_left.getEncoder().getPosition());
-            System.out.println("GOAL:" +kPIDController.getGoal().position);
-            double voltage = kPIDController.calculate(getPosition().in(Meters));
-                    m_left.setVoltage(voltage);
-                    String voltageS = " " +voltage;
-                    System.out.println(voltageS);
+        // kPIDController.calculate(m_left.getEncoder().getPosition());
+        System.out.println("GOAL:" + kPIDController.getGoal().position);
+        double voltage = kPIDController.calculate(getPosition().in(Meters));
+        m_left.setVoltage(voltage);
+        String voltageS = " " + voltage;
+        System.out.println(voltageS);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class Elevator extends SubsystemBase {
                 () -> {
                     double voltage = kPIDController.calculate(getPosition().in(Meters));
                     m_left.setVoltage(voltage);
-                    String voltageS = " " +voltage;
+                    String voltageS = " " + voltage;
                     Commands.print(voltageS);
                 });
     }

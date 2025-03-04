@@ -12,7 +12,7 @@ public class IntakeConsts {
 
     public static final double kIntakeSpeed = 0.75;
     public static final double kOuttakeSpeed = -0.5;
-    public static final double kKickSpeed  = 0.5;
+    public static final double kKickSpeed = 0.5;
 
     public static final int kLeftID = 9;
     public static final int kRightID = 8;
@@ -33,6 +33,6 @@ public class IntakeConsts {
         kRightConfig.apply(config);
 
         // Setup motor independent changes.
-        //kRightConfig.follow(kLeftID, true);
+        // kRightConfig.follow(kLeftID, true);
     }
 }

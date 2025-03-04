@@ -26,23 +26,27 @@ public class Intake extends SubsystemBase {
 
     /** @return A Command which disables motor output. */
     public Command disable() {
-        return run(() -> {
-            m_kicker.disable();
-            m_sucker.disable();
-        });
+        return run(
+                () -> {
+                    m_kicker.disable();
+                    m_sucker.disable();
+                });
     }
 
     /** @return A Command which intakes. */
     public Command intake() {
         return run(() -> m_sucker.set(kIntakeSpeed));
     }
-    public Command intakeStop(){
+
+    public Command intakeStop() {
         return run(m_sucker::disable);
     }
-    public Command kick(){
+
+    public Command kick() {
         return run(() -> m_kicker.set(kKickSpeed));
     }
-    public Command kickStop(){
+
+    public Command kickStop() {
         return run(m_kicker::disable);
     }
 
