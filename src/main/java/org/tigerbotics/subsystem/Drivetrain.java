@@ -129,7 +129,7 @@ public class Drivetrain extends SubsystemBase {
         // Update the NavX angle
         int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[4]");
         SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
-        angle.set(m_navx.getYaw() - deltaOmega);
+        angle.set(m_navx.getYaw() + deltaOmega);
     }
 
     // ~ Getters
@@ -180,8 +180,6 @@ public class Drivetrain extends SubsystemBase {
         double flDuty, frDuty, rlDuty, rrDuty;
 
         MecanumDriveWheelSpeeds ws = kKinematics.toWheelSpeeds(targetChassisSpeed);
-
-        System.out.println(ws.toString());
 
         flDuty = ws.frontLeftMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
         frDuty = ws.frontRightMetersPerSecond / kMaxLinearVelocity.in(MetersPerSecond);
