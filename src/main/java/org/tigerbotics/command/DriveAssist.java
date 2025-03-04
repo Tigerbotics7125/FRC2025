@@ -132,7 +132,8 @@ public class DriveAssist {
 
                     // If field oriented, then rotate the translation to match robot orientation.
                     if (m_config.robotOrientation() == RobotOrientation.kFieldOriented) {
-                        m_translation = m_translation.rotateBy(m_drive.getRotation2d().unaryMinus());
+                        m_translation =
+                                m_translation.rotateBy(m_drive.getRotation2d().unaryMinus());
                     }
 
                     // The z rotation speed around theta.
