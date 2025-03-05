@@ -123,7 +123,8 @@ public class Elevator extends SubsystemBase {
      *     position and velocity respectively.
      */
     public void setGoal(TrapezoidProfile.State goal) {
-        double position = MathUtil.clamp(goal.position, kMinHeight.in(Meters), kMaxHeight.in(Meters));
+        double position =
+                MathUtil.clamp(goal.position, kMinHeight.in(Meters), kMaxHeight.in(Meters));
         kPIDController.setGoal(new TrapezoidProfile.State(position, 0.0));
     }
 
