@@ -5,10 +5,11 @@
  */
 package org.tigerbotics;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -20,9 +21,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-
-import static edu.wpi.first.units.Units.Seconds;
-
 import org.tigerbotics.command.DriveAssist;
 import org.tigerbotics.constant.DriveConsts;
 import org.tigerbotics.constant.SuperStructConsts.SuperStructState;
@@ -151,7 +149,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        Commands.waitTime(Seconds.of(5)).andThen(m_drivetrain.setIdleMode(IdleMode.kCoast)).schedule();
+        Commands.waitTime(Seconds.of(5))
+                .andThen(m_drivetrain.setIdleMode(IdleMode.kCoast))
+                .schedule();
     }
 
     @Override

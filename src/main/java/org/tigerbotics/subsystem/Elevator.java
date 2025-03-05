@@ -91,7 +91,6 @@ public class Elevator extends SubsystemBase {
             setGoal(new TrapezoidProfile.State(setpointEntry.get(), 0));
         double voltage = kPIDController.calculate(getPosition().in(Meters));
         m_left.setVoltage(voltage);
-    
     }
 
     @Override
