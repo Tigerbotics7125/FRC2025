@@ -16,7 +16,7 @@ public class SuperStructConsts {
         START(Meters.of(0), Degrees.of(0)),
         DEMO(Meters.of(1), Degrees.of(0)),
         GROUND(Meters.of(0), Degrees.of(0)),
-        FIRST(Meters.of(.5), Degrees.of(0)),
+        FIRST(Meters.of(0.5), Degrees.of(0)),
         SECOND(Meters.of(1), Degrees.of(0)),
         THIRD(Meters.of(1.25), Degrees.of(0)),
         FOURTH(Meters.of(1.5), Degrees.of(0));

@@ -103,7 +103,7 @@ public class Robot extends TimedRobot {
         // m_operator.a().onTrue(Commands.run(() -> m_elev.setGoal(
         // new TrapezoidProfile.State(0.5, 0)),m_elev));
 
-        m_operator.a().onTrue(Commands.print("First"));
+        m_operator.a().onTrue(m_superStructure.setState(SuperStructState.FIRST));
         m_operator.x().onTrue(m_superStructure.setState(SuperStructState.SECOND));
         m_operator.y().onTrue(m_superStructure.setState(SuperStructState.THIRD));
         m_operator.b().onTrue(m_superStructure.setState(SuperStructState.FOURTH));

@@ -83,9 +83,8 @@ public class ElevConsts {
         kRightConfig.follow(kLeftID, true);
     }
 
-    // TODO: I have no idea if these are real or not, should only matter for sim I think though.
-    public static final Distance kMinHeight = Feet.of(2.5);
-    public static final Distance kMaxHeight = Feet.of(6);
+    public static final Distance kMinHeight = Meters.of(0.0);
+    public static final Distance kMaxHeight = Meters.of(1.5);
 
     public static final ElevatorSim kElevSim =
             new ElevatorSim(

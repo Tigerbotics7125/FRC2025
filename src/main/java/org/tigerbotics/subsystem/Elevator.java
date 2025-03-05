@@ -15,6 +15,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleEntry;
@@ -123,7 +124,8 @@ public class Elevator extends SubsystemBase {
      *     position and velocity respectively.
      */
     public void setGoal(TrapezoidProfile.State goal) {
-        kPIDController.setGoal(goal);
+        double position = MathUtil.clamp(goal.position, kMinHeight.in(Meters), kMaxHeight.in(Meters));
+        kPIDController.setGoal(new TrapezoidProfile.State(position, 0.0));
     }
 
     /**
