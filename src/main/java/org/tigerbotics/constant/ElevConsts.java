@@ -36,7 +36,7 @@ public class ElevConsts {
 
     // TODO: These were tuned for sim, obviously will need to be re-tuned IRL.
     public static final ProfiledPIDController kPIDController =
-            new ProfiledPIDController(100, 0, 0, new TrapezoidProfile.Constraints(2, 1.0));
+            new ProfiledPIDController(350, 0, 0, new TrapezoidProfile.Constraints(1, 0,25));
 
     // TODO: Figure out the actual gear ratio
     public static final Dimensionless kGearRatio = Rotations.of(36).div(Rotations.of(1));
